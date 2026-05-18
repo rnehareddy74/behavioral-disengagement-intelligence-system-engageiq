@@ -1,6 +1,6 @@
 # Behavioral Disengagement Intelligence System (BDIS)
 
-A production-style behavioral health engagement analytics pipeline — built to answer not just *who* will disengage, but *when*, *why*, and *what to do about it*.
+A production-style behavioral health engagement analytics pipeline which is  built to answer not just *who* will disengage, but *when*, *why*, and *what to do about it*.
 
 ---
 
@@ -28,7 +28,7 @@ pip install -r requirements.txt
 
 
 # Step 1 — full pipeline
-jupyter notebook 02_full_pipeline.ipynb
+jupyter notebook full_pipeline_real.ipynb
 ```
 
 Run order matters. We have  `patient_data.csv`. The pipeline reads from it.
@@ -39,7 +39,7 @@ Run order matters. We have  `patient_data.csv`. The pipeline reads from it.
 
 ```
 
-02_full_pipeline.ipynb     → full end-to-end pipeline
+full_pipeline_real.ipynb     → full end-to-end pipeline
 patient_data.csv           → single source of truth
 patient_final.csv          → full pipeline output
 clinician_worklist.csv     → high priority patients for human outreach
@@ -49,7 +49,7 @@ requirements.txt           → dependencies
 
 ---
 
-## Pipeline — Step by Step with Decision Rationale
+## Pipeline — Step by Step 
 
 ### Step 1 — Load Data
 
@@ -82,20 +82,20 @@ Data types are verified immediately. Integer columns (`missed_checkins`, `days_s
 **5 models compared:** Logistic Regression, Random Forest, Gradient Boosting, XGBoost, LightGBM.
 
 **Why compare at all:**
-Model selection should be driven by evidence, not preference. Every model is trained, evaluated, and ranked. The code picks the winner automatically based on cross-validated AUC — no manual choice.
+Model selection should be driven by evidence, not preference. Every model is trained, evaluated, and ranked. The code picks the winner automatically based on cross-validated AUC.
 
 **Why CV AUC over test AUC:**
-Test AUC depends on one random split and can be misleading. Cross-validated AUC averages across 5 folds — more robust, less sensitive to which patients happened to land in the test set.
+Test AUC depends on one random split and can be misleading. Cross-validated AUC averages across 5 folds is more robust, less sensitive to which patients happened to land in the test set.
 
 **Why Random Forest wins:**
- Why Random Forest wins on this data: Random Forest achieved the highest CV AUC across 5 folds — the most robust measure of generalisation. On this dataset with noisy labels and overlapping behavioral signals, Random Forest's ensemble of uncorrelated trees handles variance better than boosting methods. Gradient Boosting, XGBoost, and LightGBM converged to similar performance — when models are this close, the winner is determined by how well each handles the noise structure of the specific dataset, not by a general rule.
+ Why Random Forest wins on this data: Random Forest achieved the highest CV AUC across 5 folds is  the most robust measure of generalisation. On this dataset with noisy labels and overlapping behavioral signals, Random Forest's ensemble of uncorrelated trees handles variance better than boosting methods. Gradient Boosting, XGBoost, and LightGBM converged to similar performance — when models are this close, the winner is determined by how well each handles the noise structure of the specific dataset, not by a general rule.
 Why not keep GBM despite similar performance: The code auto-selects by CV AUC. Random Forest won that comparison on this data. In production with a larger dataset, GBM or LightGBM would likely pull ahead — boosting methods generally scale better. But on 600 noisy patients, Random Forest is the honest winner.
 
 **Why not XGBoost or LightGBM:**
-All three perform similarly on datasets of this size. XGBoost adds L1/L2 regularisation — more useful on very high-dimensional sparse data. LightGBM is significantly faster on 100k+ rows — irrelevant at 600 patients. GBM is sklearn-native, no extra dependency, and works directly with SHAP TreeExplainer.
+All three perform similarly on datasets of this size. XGBoost adds L1/L2 regularisation and is  more useful on very high-dimensional sparse data. LightGBM is significantly faster on 100k+ rows and is irrelevant at 600 patients. GBM is sklearn-native, no extra dependency, and works directly with SHAP TreeExplainer.
 
 **Why not LSTM:**
-LSTMs require dense, regular time sequences. Real patient engagement data is sparse, irregular, and full of gaps. GBM handles this natively. LSTMs and GBMs are complementary tools — LSTM for sequence modeling, GBM for structured risk scoring. They are not competitors.
+LSTMs require dense, regular time sequences. Real patient engagement data is sparse, irregular, and full of gaps. GBM handles this natively. LSTMs and GBMs are complementary tools . LSTM for sequence modeling, GBM for structured risk scoring. They are not competitors.
 
 **Expected performance:**
 - AUC: 0.74–0.78 — realistic for noisy behavioral data
@@ -107,7 +107,7 @@ LSTMs require dense, regular time sequences. Real patient engagement data is spa
 ### Step 4 — Survival Analysis
 
 **Why survival analysis on top of risk scoring:**
-Risk score answers *who* will disengage. Survival analysis answers *when*. Two patients can both have a 0.70 risk score — one projected to disengage in 5 days, another in 6 weeks. They should not receive the same response.
+Risk score answers *who* will disengage. Survival analysis answers *when*. Two patients can both have a 0.70 risk score where one is  projected to disengage in 5 days, another in 6 weeks. They should not receive the same response.
 
 **In real data:**
 ```python
@@ -118,10 +118,10 @@ event_observed = 1  # confirmed dropout
 Censored patients are not ignored — KM uses partial information correctly: "this patient survived at least until today."
 
 **Kaplan-Meier curves:**
-Non-parametric survival curves by risk tier. The median survival time is where the curve crosses 50% — half the group has disengaged by that day. If the curve never crosses 50%, most patients are still engaged — that is a good outcome, not an error.
+Non-parametric survival curves by risk tier. The median survival time is where the curve crosses 50% , half the group has disengaged by that day. If the curve never crosses 50%, most patients are still engaged — that is a good outcome, not an error.
 
 **Assumption — proportional hazards:**
-The ratio of dropout rates between groups stays constant over time. Checked visually — if KM curves cross, the assumption is violated. In real data, Schoenfeld residuals test confirms this formally.
+The ratio of dropout rates between groups stays constant over time.  If KM curves cross, the assumption is violated. In real data, Schoenfeld residuals test confirms this formally.
 
 **Log-rank test:**
 KM curves can look different by chance. The log-rank test asks whether the difference is statistically real.
@@ -262,5 +262,5 @@ lifelines>=0.27.0
 matplotlib>=3.7.0
 ```
 ##  Future outlook 
-**Causual Inferece**
+**Causual Inference**
 **Add Sequence modeling using LSTM**
